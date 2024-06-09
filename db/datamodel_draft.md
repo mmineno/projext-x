@@ -1,404 +1,382 @@
 ```mermaid
-erDiagram
-   HOSPITAL ||--|{ KARTE_USER : has
-   HOSPITAL ||--|{ PATIENT : has
-   PATIENT ||--|{ KARTE : has
-   PATIENT ||--|{ PATIENT_ALLERGIE : has
-   PATIENT ||--|{ PATIENT_BYOMEI : has
-   PATIENT ||--|{ PATIENT_YAKUZAI : has
-   PATIENT ||--|{ UKETSUKE : has
-   PATIENT_BYOMEI ||--|{ PATIENT_BYOMEI_SHUSHOKUGO : has
-   KARTE ||--|{ UKETSUKE : has
-   KARTE ||--|{ KARTE_KIJI : has
-   KARTE ||--|{ SINRYO_COMMENT : has
-   KARTE ||--|{ SINRYO_ITEM : has
-   KARTE ||--|{ SINRYO_UNIT : has
-   KARTE_KIJI ||--|{ VITAL_BODY : has
-   KARTE_USER }|--|| USER_PRIVILEGE : has
-   SINRYO_SET ||--|{ SINRYO_SET_UNIT : has
-   SINRYO_SET_UNIT ||--|{ SINRYO_SET_ITEM : has
-   SINRYO_UNIT ||--|| ORDER_ACCEPT : has
-   SINRYO_UNIT ||--|{ SINRYO_ITEM : has
-   UKETSUKE ||--|{ UKETSUKE_STATE : has
-   UKETSUKE_STATE ||--|| UKETSUKE_SINRYO_NAIYO : has
-   USER_ACCESS ||--|{ USER_ACCESS_PATIENT : has
+classDiagram
+    class 医療機関 {
+        医療機関ID PK
+        医療機関コード(10桁)
+        医療機関名
+        住所(郵便番号)
+        住所(都道府県)
+        住所(市区町村)
+        住所(丁目番地)
+        住所(建物名)
+        電話番号
+    }
+    医療機関 "1" -- "n" 患者基本情報
 
-   HOSPITAL {
-       int HOSPITAL_ID PK
-       int HOSPITAL_INITIAL_ID
-       varchar NAME
-       int HOSPITAL_CODE
-       varchar JPN_HOSPITAL_CODE
-       smallint INNAI_INGAI_KBN
-       timestamp CREATE_TIMESTAMP
-       int CREATE_USER_ID
-       timestamp DELETE_TIMESTAMP
-       int DELETE_USER_ID
-       smallint DELETE_STATE
-       smallint VERSION_NO
-   }
+    class 患者基本情報 {
+        患者基本情報ID : PK
+        医療機関ID : FK
+        患者ID(患者番号、カルテ番号、診察券番号)
+        氏名(漢字)
+        氏名(カナ)
+        氏名(その他)
+        性別
+        生年月日
+        住所(郵便番号)
+        住所(都道府県)
+        住所(市区町村)
+        住所(丁目番地)
+        住所(建物名)
+        電話番号
+        携帯番号
+        死亡日時 TODO
+        テスト患者フラグ
+        移行先患者ID : 同一人物に
+    }
 
-   KARTE {
-       int KARTE_ID PK
-       int KARTE_INITIAL_ID
-       int KARTE_PREVIOUS_ID
-       int HOSPITAL_ID FK
-       int PATIENT_ID FK
-       smallint NYUGAI_KBN
-       int NYUIN_ID
-       int KARTE_DATE
-       smallint KARTE_TIME
-       smallint KAIKEI_TIME 
-       int DOCTOR_ID
-       smallint ORCA_SINRYOKA_CODE
-       smallint ORCA_HOKEN_COMBI_NUM
-       smallint DOJITSU_KAISU
-       boolean OTHER_SYSTEM_FLAG
-       smallint KAIKEI_STATE
-       boolean APPROVED_FLAG
-       boolean TEMP_SAVE_FLAG
-       smallint REVISION_NUM
-       smallint LATEST_STATE
-       smallint REVISION_STATE
+    class 受付 {
+       受付ID
+       KARTE_ID
+       UKETSUKE_DATE
+       UKETSUKE_TIME : smallint
+       HOSPITAL_ID
+       PATIENT_ID
+       UKETSUKE_NUM : varchar
+       ORCA_HOKEN_COMBI_NUM : smallint
+       HOKEN_NUM : smallint
+       ORCA_SINRYOKA_CODE : smallint
+       DOCTOR_ID
+       COMMENT1 : varchar
+       REVISION_NUM : smallint
+       LATEST_STATE : smallint
+       REVISION_STATE : smallint
+       UKETSUKE_STATE : smallint
    }
 
-   KARTE_FILE {
-       int KARTE_FILE_ID PK
-       int KARTE_FILE_INITIAL_ID
-       varchar FILE_NAME
-       int OWNER_ID
-       smallint OWNER_KBN
-       int FILE_DATE
-       varchar COMMENT1
-       varchar FILE_KEY
-       bigint FILE_SIZE
-       varchar EXTENSION
-       smallint ORCA_SINRYOKA_CODE
-       smallint NYUGAI_KBN
-       smallint REVISION_NUM
-       smallint LATEST_STATE
-       smallint REVISION_STATE
+   class カルテ {
+       カルテID
+       PATIENT_ID
+       NYUGAI_KBN : smallint
+       NYUIN_ID
+       KARTE_DATE
+       KARTE_TIME : smallint
+       KAIKEI_TIME : smallint
+       DOCTOR_ID
+       ORCA_SINRYOKA_CODE : smallint
+       ORCA_HOKEN_COMBI_NUM : smallint
+       DOJITSU_KAISU : smallint
+       OTHER_SYSTEM_FLAG : boolean
+       KAIKEI_STATE : smallint
+       APPROVED_FLAG : boolean
+       TEMP_SAVE_FLAG : boolean
+       REVISION_NUM : smallint
+       LATEST_STATE : smallint
+       REVISION_STATE : smallint
    }
 
-   KARTE_KIJI {
-       int KARTE_KIJI_ID PK
-       int KARTE_KIJI_INITIAL_ID
-       int KARTE_ID FK
-       smallint NYUGAI_KBN
-       int PATIENT_ID
-       smallint KIJI_HEIGHT
-       float LAYER_HEIGHT
-       varchar KIJI_JSON
-       varchar KIJI_SVG
-       varchar BASE_KIJI_CONTENT
-       smallint KIJI_INDEX
-       boolean APPROVED_FLAG
-       smallint REVISION_NUM
-       smallint LATEST_STATE
-       smallint REVISION_STATE
+   class KARTE_FILE {
+       KARTE_FILE_ID
+       KARTE_FILE_INITIAL_ID
+       FILE_NAME : varchar
+       OWNER_ID
+       OWNER_KBN : smallint
+       FILE_DATE
+       COMMENT1 : varchar
+       FILE_KEY : varchar
+       FILE_SIZE : bigint
+       EXTENSION : varchar
+       ORCA_SINRYOKA_CODE : smallint
+       NYUGAI_KBN : smallint
+       REVISION_NUM : smallint
+       LATEST_STATE : smallint
+       REVISION_STATE : smallint
    }
 
-   KARTE_USER {
-       int KARTE_USER_ID PK
-       int KARTE_USER_INITIAL_ID
-       int HOSPITAL_ID FK
-       varchar USER_CODE
-       varchar USER_PASSWORD
-       int ORCA_USER_CODE
-       varchar FAMILY_NAME
-       varchar FIRST_NAME
-       varchar KANA_FAMILY_NAME
-       varchar KANA_FIRST_NAME
-       smallint GENDER
-       smallint JOB
-       smallint DATE_DISPLAY_KBN
-       smallint REVISION_NUM
-       smallint LATEST_STATE
-       smallint REVISION_STATE
-       int VALID_START_DATE
-       int VALID_END_DATE
+   class KARTE_KIJI {
+       KARTE_KIJI_ID
+       KARTE_KIJI_INITIAL_ID
+       KARTE_ID
+       NYUGAI_KBN : smallint
+       PATIENT_ID
+       KIJI_HEIGHT : smallint
+       LAYER_HEIGHT : float
+       KIJI_JSON : varchar
+       KIJI_SVG : varchar
+       BASE_KIJI_CONTENT : varchar
+       KIJI_INDEX : smallint
+       APPROVED_FLAG : boolean
+       REVISION_NUM : smallint
+       LATEST_STATE : smallint
+       REVISION_STATE : smallint
    }
 
-   PATIENT {
-       int PATIENT_ID PK
-       int PATIENT_INITIAL_ID
-       int HOSPITAL_ID FK
-       varchar PATIENT_NUM
-       varchar FAMILY_NAME
-       varchar FIRST_NAME
-       varchar KANA_FAMILY_NAME
-       varchar KANA_FIRST_NAME
-       smallint GENDER
-       int BIRTH_DAY
-       varchar POST
-       varchar ADDRESS1
-       varchar ADDRESS2
-       varchar TEL1
-       varchar TEL2
-       varchar SETAINUSI
-       boolean DEATH_FLAG
-       varchar ORCA_NOTE1
-       varchar ORCA_NOTE2
-       varchar JOB_NAME
-       boolean TEST_PATIENT_FLAG
-       int VALID_START_DATE
-       int VALID_END_DATE
-       int CREATE_USER_ID
-       timestamp CREATE_TIMESTAMP
-       int UPDATE_USER_ID
-       timestamp UPDATE_TIMESTAMP
-       int DELETE_USER_ID
-       timestamp DELETE_TIMESTAMP
-       smallint VERSION_NO
-       smallint DELETE_STATE
-       smallint LATEST_STATE
-       varchar KARTE_NOTE1
+   class KARTE_USER {
+       KARTE_USER_ID
+       KARTE_USER_INITIAL_ID
+       HOSPITAL_ID
+       USER_CODE : varchar
+       USER_PASSWORD : varchar
+       ORCA_USER_CODE
+       FAMILY_NAME : varchar
+       FIRST_NAME : varchar
+       KANA_FAMILY_NAME : varchar
+       KANA_FIRST_NAME : varchar
+       GENDER : smallint
+       JOB : smallint
+       DATE_DISPLAY_KBN : smallint
+       REVISION_NUM : smallint
+       LATEST_STATE : smallint
+       REVISION_STATE : smallint
+       VALID_START_DATE
+       VALID_END_DATE
    }
 
-   PATIENT_ALLERGIE {
-       int PATIENT_ALLERGIE_ID PK
-       int PATIENT_ALLERGIE_INITIAL_ID
-       int PATIENT_ID FK
-       varchar ALLERGIE_CODE
-       int START_YEAR_MONTH
-       varchar COMMENT1
-       smallint REVISION_NUM
-       smallint LATEST_STATE
-       smallint REVISION_STATE
+   class PATIENT_ALLERGIE {
+       PATIENT_ALLERGIE_ID
+       PATIENT_ALLERGIE_INITIAL_ID
+       PATIENT_ID
+       ALLERGIE_CODE : varchar
+       START_YEAR_MONTH
+       COMMENT1 : varchar
+       REVISION_NUM : smallint
+       LATEST_STATE : smallint
+       REVISION_STATE : smallint
    }
 
-   PATIENT_BYOMEI {
-       int PATIENT_BYOMEI_ID PK
-       int PATIENT_BYOMEI_INITIAL_ID
-       int PATIENT_BYOMEI_PREVIOUS_ID
-       int PATIENT_ID FK
-       varchar FULL_BYOMEI
-       varchar BYOMEI
-       int BYOMEI_CODE
-       smallint ORCA_SINRYOKA_CODE
-       smallint ORCA_HOKEN_COMBI_NUM
-       smallint NYUGAI_KBN
-       int START_DATE
-       int TENKI_DATE
-       smallint TENKI_KBN
-       boolean SHUBYOMEI_FLAG
-       boolean UTAGAI_FLAG
-       boolean HOKEN_BYOMEI_FLAG
-       smallint PATIENT_BYOMEI_KBN
-       boolean SHUJUTSU_FLAG
-       boolean YUKETSU_FLAG
-       varchar COMMENT1
-       boolean UNCODED_FLAG
-       smallint REVISION_NUM
-       smallint LATEST_STATE
-       smallint REVISION_STATE
+   class PATIENT_BYOMEI {
+       PATIENT_BYOMEI_ID
+       PATIENT_BYOMEI_INITIAL_ID
+       PATIENT_BYOMEI_PREVIOUS_ID
+       PATIENT_ID
+       FULL_BYOMEI : varchar
+       BYOMEI : varchar
+       BYOMEI_CODE
+       ORCA_SINRYOKA_CODE : smallint
+       ORCA_HOKEN_COMBI_NUM : smallint
+       NYUGAI_KBN : smallint
+       START_DATE
+       TENKI_DATE
+       TENKI_KBN : smallint
+       SHUBYOMEI_FLAG : boolean
+       UTAGAI_FLAG : boolean
+       HOKEN_BYOMEI_FLAG : boolean
+       PATIENT_BYOMEI_KBN : smallint
+       SHUJUTSU_FLAG : boolean
+       YUKETSU_FLAG : boolean
+       COMMENT1 : varchar
+       UNCODED_FLAG : boolean
+       REVISION_NUM : smallint
+       LATEST_STATE : smallint
+       REVISION_STATE : smallint
    }
 
-   PATIENT_BYOMEI_SHUSHOKUGO {
-       int PATIENT_BYOMEI_SHUSHOKUGO_ID PK
-       int PATIENT_BYOMEI_SHUSHOKUGO_INITIAL_ID
-       int PATIENT_BYOMEI_SHUSHOKUGO_PREVIOUS_ID
-       int PATIENT_BYOMEI_ID FK
-       smallint SHUSHOKUGO_CODE
-       varchar SHUSHOKUGO_NAME
-       smallint SHUSHOKUGO_INDEX
-       smallint REVISION_NUM
-       smallint LATEST_STATE
-       smallint REVISION_STATE
+   class PATIENT_BYOMEI_SHUSHOKUGO {
+       PATIENT_BYOMEI_SHUSHOKUGO_ID
+       PATIENT_BYOMEI_SHUSHOKUGO_INITIAL_ID
+       PATIENT_BYOMEI_SHUSHOKUGO_PREVIOUS_ID
+       PATIENT_BYOMEI_ID
+       SHUSHOKUGO_CODE : smallint
+       SHUSHOKUGO_NAME : varchar
+       SHUSHOKUGO_INDEX : smallint
+       REVISION_NUM : smallint
+       LATEST_STATE : smallint
+       REVISION_STATE : smallint
    }
 
-   PATIENT_YAKUZAI {
-       int PATIENT_YAKUZAI_ID PK
-       int PATIENT_YAKUZAI_INITIAL_ID
-       int PATIENT_ID FK
-       int SINRYO_CODE
-       varchar SINRYO_NAME  
-       int START_YEAR_MONTH
-       boolean USE_FLAG
-       smallint PATIENT_YAKUZAI_KBN
-       varchar COMMENT1
-       smallint REVISION_NUM
-       smallint LATEST_STATE
-       smallint REVISION_STATE
+   class PATIENT_YAKUZAI {
+       PATIENT_YAKUZAI_ID
+       PATIENT_YAKUZAI_INITIAL_ID
+       PATIENT_ID
+       SINRYO_CODE
+       SINRYO_NAME : varchar
+       START_YEAR_MONTH
+       USE_FLAG : boolean
+       PATIENT_YAKUZAI_KBN : smallint
+       COMMENT1 : varchar
+       REVISION_NUM : smallint
+       LATEST_STATE : smallint
+       REVISION_STATE : smallint
    }
 
-   SINRYOKA {
-       int SINRYOKA_ID PK
-       smallint ORCA_SINRYOKA_CODE
-       int UKETSUKE_DOCTOR_ID
-       timestamp CREATE_TIMESTAMP
-       int CREATE_USER_ID
-       timestamp UPDATE_TIMESTAMP
-       int UPDATE_USER_ID
-       smallint VERSION_NO
+   class SINRYOKA {
+       SINRYOKA_ID
+       ORCA_SINRYOKA_CODE : smallint
+       UKETSUKE_DOCTOR_ID
+       CREATE_TIMESTAMP : timestamp
+       CREATE_USER_ID
+       UPDATE_TIMESTAMP : timestamp
+       UPDATE_USER_ID
+       VERSION_NO : smallint
    }
 
-   SINRYO_COMMENT {
-       int SINRYO_COMMENT_ID PK
-       int SINRYO_COMMENT_INITIAL_ID
-       int SINRYO_COMMENT_PREVIOUS_ID
-       int PATIENT_ID
-       int KARTE_ID FK
-       int PARENT_ID
-       smallint SINRYO_KBN
-       smallint NYUGAI_KBN
-       varchar CONTENT
-       smallint PARENT_KBN
-       int KARTE_DATE
-       int SINRYO_CODE
-       smallint COMMENT_INDEX
-       boolean APPROVED_FLAG
-       smallint REVISION_NUM  
-       smallint LATEST_STATE
-       smallint REVISION_STATE
+   class SINRYO_COMMENT {
+       SINRYO_COMMENT_ID
+       SINRYO_COMMENT_INITIAL_ID
+       SINRYO_COMMENT_PREVIOUS_ID
+       PATIENT_ID
+       KARTE_ID
+       PARENT_ID
+       SINRYO_KBN : smallint
+       NYUGAI_KBN : smallint
+       CONTENT : varchar
+       PARENT_KBN : smallint
+       KARTE_DATE
+       SINRYO_CODE
+       COMMENT_INDEX : smallint
+       APPROVED_FLAG : boolean
+       REVISION_NUM : smallint
+       LATEST_STATE : smallint
+       REVISION_STATE : smallint
    }
 
-   SINRYO_ITEM {
-       int SINRYO_ITEM_ID PK  
-       int SINRYO_ITEM_INITIAL_ID
-       int SINRYO_ITEM_PREVIOUS_ID
-       int PATIENT_ID
-       int TENSU_HOSPITAL_ID
-       int KARTE_ID FK
-       int SINRYO_UNIT_ID FK
-       int SINRYO_CODE
-       varchar SINRYO_NAME
-       varchar SINRYO_KANA_NAME
-       smallint NYUGAI_KBN 
-       smallint SINRYO_KBN
-       smallint SINRYO_SHUBETSU_KBN
-       smallint SINRYO_ITEM_INDEX
-       int KARTE_DATE
-       smallint ORCA_INPUT_STATE
-       smallint TANI_CODE
-       smallint TENSU_KBN
-       smallint TENSU_DATA_KBN
-       int SINRYO_ITEM_PATTERN_ID
-       numeric SURYO  
-       smallint REVISION_NUM
-       smallint LATEST_STATE
-       smallint REVISION_STATE
-       boolean FUKINTO_FLAG
-       numeric SURYO_KISHO
-       numeric SURYO_ASA
-       numeric SURYO_HIRU
-       numeric SURYO_YU
-       numeric SURYO_SHUSHIN
-       smallint KENSA_KBN
-       smallint ROSAI_KBN
-       boolean APPROVED_FLAG
-       varchar KENSA_CODE
-       int KENSA_KAISHA_ID
+   class SINRYO_ITEM {
+       SINRYO_ITEM_ID
+       SINRYO_ITEM_INITIAL_ID
+       SINRYO_ITEM_PREVIOUS_ID
+       PATIENT_ID
+       TENSU_HOSPITAL_ID
+       KARTE_ID
+       SINRYO_UNIT_ID
+       SINRYO_CODE
+       SINRYO_NAME : varchar
+       SINRYO_KANA_NAME : varchar
+       NYUGAI_KBN : smallint
+       SINRYO_KBN : smallint
+       SINRYO_SHUBETSU_KBN : smallint
+       SINRYO_ITEM_INDEX : smallint
+       KARTE_DATE
+       ORCA_INPUT_STATE : smallint
+       TANI_CODE : smallint
+       TENSU_KBN : smallint
+       TENSU_DATA_KBN : smallint
+       SINRYO_ITEM_PATTERN_ID
+       SURYO : numeric
+       REVISION_NUM : smallint
+       LATEST_STATE : smallint
+       REVISION_STATE : smallint
+       FUKINTO_FLAG : boolean
+       SURYO_KISHO : numeric
+       SURYO_ASA : numeric
+       SURYO_HIRU : numeric
+       SURYO_YU : numeric
+       SURYO_SHUSHIN : numeric
+       KENSA_KBN : smallint
+       ROSAI_KBN : smallint
+       APPROVED_FLAG : boolean
+       KENSA_CODE : varchar
+       KENSA_KAISHA_ID
    }
 
-   SINRYO_UNIT {
-       int SINRYO_UNIT_ID PK
-       int SINRYO_UNIT_INITIAL_ID
-       int SINRYO_UNIT_PREVIOUS_ID
-       int KARTE_ID FK
-       smallint ORDER_KBN 
-       int SINRYO_UNIT_TARGET_ID
-       int SINRYO_UNIT_ASSOCIATED_ID
-       bigint KARTE_DATETIME
-       smallint IRYO_KBN
-       smallint SINRYO_KBN
-       smallint SINRYO_SHUBETSU_KBN
-       smallint TEIKI_KBN
-       smallint TEIKI_CODE
-       smallint ORCA_SINRYOKA_CODE
-       smallint ORCA_HOKEN_COMBI_NUM
-       smallint SINRYO_UNIT_INDEX
-       smallint KAISU
-       smallint NISSU
-       smallint SANTEI_KBN
-       boolean RINJI_FLAG
-       boolean TAIIN_FLAG
-       smallint INNAI_INGAI_KBN
-       int ORDER_START_DATE
-       smallint ORDER_START_TIME_KBN
-       int ORDER_END_DATE
-       smallint ORDER_END_TIME_KBN
-       boolean SHUGI_NASHI_FLAG
-       boolean ZAITAKU_FLAG
-       boolean ZOEI_FLAG
-       smallint KENSA_KBN
-       boolean APPROVED_FLAG
-       smallint REVISION_NUM
-       smallint LATEST_STATE
-       smallint REVISION_STATE
-       int FULL_SINRYO_PATTERN_ID
-       int PLAIN_SINRYO_PATTERN_ID
-   }
-   
-   UKETSUKE {
-       int UKETSUKE_ID PK
-       int UKETSUKE_INITIAL_ID
-       int UKETSUKE_PREVIOUS_ID
-       int KARTE_ID FK
-       int UKETSUKE_DATE
-       smallint UKETSUKE_TIME
-       int HOSPITAL_ID
-       int PATIENT_ID FK
-       varchar UKETSUKE_NUM
-       smallint ORCA_HOKEN_COMBI_NUM  
-       smallint HOKEN_NUM
-       smallint ORCA_SINRYOKA_CODE
-       int DOCTOR_ID
-       varchar COMMENT1
-       smallint REVISION_NUM
-       smallint LATEST_STATE
-       smallint REVISION_STATE
-       smallint UKETSUKE_STATE
+   class SINRYO_UNIT {
+       SINRYO_UNIT_ID
+       SINRYO_UNIT_INITIAL_ID
+       SINRYO_UNIT_PREVIOUS_ID
+       KARTE_ID
+       ORDER_KBN : smallint
+       SINRYO_UNIT_TARGET_ID
+       SINRYO_UNIT_ASSOCIATED_ID
+       KARTE_DATETIME : bigint
+       IRYO_KBN : smallint
+       SINRYO_KBN : smallint
+       SINRYO_SHUBETSU_KBN : smallint
+       TEIKI_KBN : smallint
+       TEIKI_CODE : smallint
+       ORCA_SINRYOKA_CODE : smallint
+       ORCA_HOKEN_COMBI_NUM : smallint
+       SINRYO_UNIT_INDEX : smallint
+       KAISU : smallint
+       NISSU : smallint
+       SANTEI_KBN : smallint
+       RINJI_FLAG : boolean
+       TAIIN_FLAG : boolean
+       INNAI_INGAI_KBN : smallint
+       ORDER_START_DATE
+       ORDER_START_TIME_KBN : smallint
+       ORDER_END_DATE
+       ORDER_END_TIME_KBN : smallint
+       SHUGI_NASHI_FLAG : boolean
+       ZAITAKU_FLAG : boolean
+       ZOEI_FLAG : boolean
+       KENSA_KBN : smallint
+       APPROVED_FLAG : boolean
+       REVISION_NUM : smallint
+       LATEST_STATE : smallint
+       REVISION_STATE : smallint
+       FULL_SINRYO_PATTERN_ID
+       PLAIN_SINRYO_PATTERN_ID
    }
 
-   USER_ACCESS {
-       int USER_ACCESS_ID PK  
-       int HOSPITAL_ID
-       int KARTE_USER_ID
-       smallint LOGIN_RESULT
-       varchar REMOTE_ADDRESS
-       timestamp LOGIN_TIMESTAMP
-       timestamp LAST_ACCESS_TIMESTAMP
-       timestamp LOGOUT_TIMESTAMP  
-       smallint VERSION_NO
+   class USER_ACCESS {
+       USER_ACCESS_ID
+       HOSPITAL_ID
+       KARTE_USER_ID
+       LOGIN_RESULT : smallint
+       REMOTE_ADDRESS : varchar
+       LOGIN_TIMESTAMP : timestamp
+       LAST_ACCESS_TIMESTAMP : timestamp
+       LOGOUT_TIMESTAMP : timestamp
+       VERSION_NO : smallint
    }
 
-   USER_ACCESS_PATIENT {
-       int USER_ACCESS_PATIENT_ID PK
-       int USER_ACCESS_ID FK
-       int PATIENT_ID  
-       timestamp ACCESS_TIMESTAMP
+   class USER_ACCESS_PATIENT {
+       USER_ACCESS_PATIENT_ID
+       USER_ACCESS_ID
+       PATIENT_ID
+       ACCESS_TIMESTAMP : timestamp
    }
 
-   USER_PRIVILEGE {
-       int USER_PRIVILEGE_ID PK
-       int USER_PRIVILEGE_INITIAL_ID
-       int KARTE_USER_ID FK
-       smallint PRIVILEGE_KBN
-       smallint REVISION_NUM
-       smallint LATEST_STATE
-       smallint REVISION_STATE  
+   class USER_PRIVILEGE {
+       USER_PRIVILEGE_ID
+       USER_PRIVILEGE_INITIAL_ID
+       KARTE_USER_ID
+       PRIVILEGE_KBN : smallint
+       REVISION_NUM : smallint
+       LATEST_STATE : smallint
+       REVISION_STATE : smallint
    }
 
-   VITAL_BODY {
-       int VITAL_ID PK
-       int VITAL_INITIAL_ID
-       int KARTE_KIJI_ID FK
-       int PATIENT_ID
-       int KARTE_DATE
-       smallint KARTE_TIME
-       smallint KETSUATSU_MAX
-       smallint KETSUATSU_MIN
-       smallint MYAKUHAKU
-       numeric TAION
-       smallint SPO2
-       numeric TAIJU  
-       numeric SINCHO
-       numeric FUKUI
-       numeric KYOI
-       numeric TOI
-       smallint REVISION_NUM
-       smallint LATEST_STATE
-       smallint REVISION_STATE
+   class VITAL_BODY {
+       VITAL_ID
+       VITAL_INITIAL_ID
+       KARTE_KIJI_ID
+       PATIENT_ID
+       KARTE_DATE
+       KARTE_TIME : smallint
+       KETSUATSU_MAX : smallint
+       KETSUATSU_MIN : smallint
+       MYAKUHAKU : smallint
+       TAION : numeric
+       SPO2 : smallint
+       TAIJU : numeric
+       SINCHO : numeric
+       FUKUI : numeric
+       KYOI : numeric
+       TOI : numeric
+       REVISION_NUM : smallint
+       LATEST_STATE : smallint
+       REVISION_STATE : smallint
    }
+
+   HOSPITAL  -->  KARTE_USER : has
+   PATIENT  -->  KARTE : has
+   PATIENT  -->  PATIENT_ALLERGIE : has
+   PATIENT  -->  PATIENT_BYOMEI : has
+   PATIENT  -->  PATIENT_YAKUZAI : has
+   PATIENT  -->  UKETSUKE : has
+   PATIENT_BYOMEI  -->  PATIENT_BYOMEI_SHUSHOKUGO : has
+   KARTE  -->  UKETSUKE : has
+   KARTE  -->  KARTE_KIJI : has
+   KARTE  -->  SINRYO_COMMENT : has
+   KARTE  -->  SINRYO_ITEM : has
+   KARTE  -->  SINRYO_UNIT : has
+   KARTE_KIJI  -->  VITAL_BODY : has
+   KARTE_USER --> USER_PRIVILEGE : has
+   SINRYO_SET --> SINRYO_SET_UNIT : has
+   SINRYO_SET_UNIT --> SINRYO_SET_ITEM : has
+   SINRYO_UNIT --> ORDER_ACCEPT : has
+   SINRYO_UNIT --> SINRYO_ITEM : has
+   UKETSUKE --> UKETSUKE_STATE : has
+   UKETSUKE_STATE --> UKETSUKE_SINRYO_NAIYO : has
+   USER_ACCESS --> USER_ACCESS_PATIENT : has
+
 ```
