@@ -1,6 +1,7 @@
 ```mermaid
 classDiagram
 direction BT
+    note "監査ログの項目、作成日時や更新日時は含めていない"
 
     class 医療機関 {
         医療機関ID PK
@@ -14,6 +15,29 @@ direction BT
         電話番号
     }
     医療機関 "1" -- "n" 患者基本情報
+
+    class 医師 {
+        医師ID : PK
+        氏名（漢字）
+        氏名（カナ）
+        診療科ID : 診療所では複数になるのが一般的なので、配列または関連テーブル
+        麻薬施用者番号 : 外来では不要
+    }
+    医療機関 "1" -- "1..n" 医師
+
+    class コメディカル {
+        コメディカルID : PK
+        氏名（漢字）
+        氏名（カナ）
+        職種 : 看護師、事務員、etc
+    }
+    医療機関 "1" -- "0..n" コメディカル
+
+    class 診療科 {
+        診療科ID : PK
+        診療科名
+        診療科略名
+    }
 
     class 患者基本情報 {
         患者基本情報ID : PK
@@ -33,7 +57,8 @@ direction BT
         携帯番号
         死亡日時 TODO
         テスト患者フラグ
-        移行先患者ID : TODO
+        患者サマリー
+        移行先患者ID : TODO 業務上の誤り等で、同一人物に複数の患者IDが発行される場合がある。
     }
     患者基本情報 "1" -- "0..n" 受付
     患者基本情報 "1" -- "0..n" 予約
@@ -47,6 +72,7 @@ direction BT
         予約状態 : 予約済、受付済、キャンセルなど
         予約メモ
     }
+    予約 "0..1" -- "0..1" カルテ
 
     class 受付 {
         受付ID : PK
@@ -60,84 +86,78 @@ direction BT
         受付メモ
     }
     受付 "1" -- "0..1" 予約
+    受付 "1" -- "0..1" カルテ
 
-   class カルテ {
-       カルテID
-       PATIENT_ID
-       NYUGAI_KBN : smallint
-       NYUIN_ID
-       KARTE_DATE
-       KARTE_TIME : smallint
-       KAIKEI_TIME : smallint
-       DOCTOR_ID
-       ORCA_SINRYOKA_CODE : smallint
-       ORCA_HOKEN_COMBI_NUM : smallint
-       DOJITSU_KAISU : smallint
-       OTHER_SYSTEM_FLAG : boolean
-       KAIKEI_STATE : smallint
-       APPROVED_FLAG : boolean
-       TEMP_SAVE_FLAG : boolean
-       REVISION_NUM : smallint
-       LATEST_STATE : smallint
-       REVISION_STATE : smallint
-   }
+    class カルテ {
+        カルテID : PK
+        患者基本情報ID : FK
+        医師ID : FK
+        診療科ID : FK
+        受付ID : FK nullable
+        予約ID : FK nullable
+        診療年月日
+        カルテ状態 : 仮保存、確定など
+    }
+    note for right of カルテ "予約ID : 予約時にオーダーを出すという要求を満たすのであれば必要になる。\nカルテなしでオーダーを出せるようにするのであればこの限りではない。"
 
-   class KARTE_FILE {
-       KARTE_FILE_ID
-       KARTE_FILE_INITIAL_ID
-       FILE_NAME : varchar
-       OWNER_ID
-       OWNER_KBN : smallint
-       FILE_DATE
-       COMMENT1 : varchar
-       FILE_KEY : varchar
-       FILE_SIZE : bigint
-       EXTENSION : varchar
-       ORCA_SINRYOKA_CODE : smallint
-       NYUGAI_KBN : smallint
-       REVISION_NUM : smallint
-       LATEST_STATE : smallint
-       REVISION_STATE : smallint
-   }
+    class SOAP {
+        SOAP_ID : PK
+        カルテID : FK
+        Subjective : 主観的所見
+        Objective : 客観的所見
+        Assessment : 評価
+        Plan : 治療方針
+    }
+    note for right of SOAP "要求に合わせてひとまずSOAPとした。"
+    カルテ "1" -- "1" SOAP
 
-   class KARTE_KIJI {
-       KARTE_KIJI_ID
-       KARTE_KIJI_INITIAL_ID
-       KARTE_ID
-       NYUGAI_KBN : smallint
-       PATIENT_ID
-       KIJI_HEIGHT : smallint
-       LAYER_HEIGHT : float
-       KIJI_JSON : varchar
-       KIJI_SVG : varchar
-       BASE_KIJI_CONTENT : varchar
-       KIJI_INDEX : smallint
-       APPROVED_FLAG : boolean
-       REVISION_NUM : smallint
-       LATEST_STATE : smallint
-       REVISION_STATE : smallint
-   }
+    class シェーマ取り込み画像 {
+        シェーマID : PK
+        シェーマ名 : 選択したシェーマの名称または取り込んだ画像ファイル名
+        内容 : フリーハンド入力等をした後のバイナリデータ
+    }
+    note for シェーマ取り込み画像 "要求に合わせてひとまずSOAPの子テーブルとした。"
+    SOAP "1" -- "0..n" シェーマ取り込み画像
 
-   class KARTE_USER {
-       KARTE_USER_ID
-       KARTE_USER_INITIAL_ID
-       HOSPITAL_ID
-       USER_CODE : varchar
-       USER_PASSWORD : varchar
-       ORCA_USER_CODE
-       FAMILY_NAME : varchar
-       FIRST_NAME : varchar
-       KANA_FAMILY_NAME : varchar
-       KANA_FIRST_NAME : varchar
-       GENDER : smallint
-       JOB : smallint
-       DATE_DISPLAY_KBN : smallint
-       REVISION_NUM : smallint
-       LATEST_STATE : smallint
-       REVISION_STATE : smallint
-       VALID_START_DATE
-       VALID_END_DATE
-   }
+    class ドキュメント {
+        ドキュメントID
+        患者基本情報ID : FK
+        カルテID : FK nullable
+        ドキュメント名
+        ドキュメント種別 : 分類を表す場合に使用
+        MIMEタイプ
+    }
+    ドキュメント "0..n" -- "1" カルテ
+
+    class 処方オーダー {
+        処方オーダーID : PK
+        カルテID : FK
+        医師ID : FK
+        オーダー日時
+        処方区分 : 内服、頓服、外用
+        定期・臨時
+        院外・院内
+        用法 : 1日3回食後、痛い時、1日2回8時間ごとなど
+        日数・回数 : 内服・定期処方の場合は日数、それ以外は回数
+        備考
+        代行入力者ID : FK nullable
+        承認状態 : 代行入力時の状態 承認済、未承認など
+    }
+    note for right of 処方オーダー "RPと同一の単位としたが、複数オーダーをまとめたい場合はこの限りではない。"
+    note for right of 処方オーダー "用法は1回量での入力を前提とする。"
+    note for right of 処方オーダー "院外処方では実施は記録しない。"
+    処方オーダー "0..n" -- "1" カルテ
+
+    class 処方医薬品 {
+        処方医薬品ID : PK
+        処方オーダーID : FK
+        標準医薬品マスターコード : FK
+        処方医薬品区分 : 一般名処方、後発品不可
+        先発品区分 : 医師指定、患者希望 後発品不可の場合に指定する
+        用量
+        備考
+    }
+    処方医薬品 "1..n" -- "1" 処方オーダー
 
    class PATIENT_ALLERGIE {
        PATIENT_ALLERGIE_ID
