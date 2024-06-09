@@ -1,14 +1,16 @@
 ```mermaid
 classDiagram
+direction BT
+
     class 医療機関 {
         医療機関ID PK
-        医療機関コード(10桁)
+        医療機関コード（10桁）
         医療機関名
-        住所(郵便番号)
-        住所(都道府県)
-        住所(市区町村)
-        住所(丁目番地)
-        住所(建物名)
+        住所（郵便番号）
+        住所（都道府県）
+        住所（市区町村）
+        住所（丁目番地）
+        住所（建物名）
         電話番号
     }
     医療機関 "1" -- "n" 患者基本情報
@@ -16,42 +18,48 @@ classDiagram
     class 患者基本情報 {
         患者基本情報ID : PK
         医療機関ID : FK
-        患者ID(患者番号、カルテ番号、診察券番号)
-        氏名(漢字)
-        氏名(カナ)
-        氏名(その他)
+        患者ID : 患者番号、カルテ番号、診察券番号
+        氏名（漢字）
+        氏名（カナ）
+        氏名（その他）
         性別
         生年月日
-        住所(郵便番号)
-        住所(都道府県)
-        住所(市区町村)
-        住所(丁目番地)
-        住所(建物名)
+        住所（郵便番号）
+        住所（都道府県）
+        住所（市区町村）
+        住所（丁目番地）
+        住所（建物名）
         電話番号
         携帯番号
         死亡日時 TODO
         テスト患者フラグ
-        移行先患者ID : 同一人物に
+        移行先患者ID : TODO
+    }
+    患者基本情報 "1" -- "0..n" 受付
+    患者基本情報 "1" -- "0..n" 予約
+
+    class 予約 {
+        予約ID : PK
+        患者基本情報ID : FK
+        医師ID : FK nullable
+        診療科ID : FK nullable
+        予約日時
+        予約状態 : 予約済、受付済、キャンセルなど
+        予約メモ
     }
 
     class 受付 {
-       受付ID
-       KARTE_ID
-       UKETSUKE_DATE
-       UKETSUKE_TIME : smallint
-       HOSPITAL_ID
-       PATIENT_ID
-       UKETSUKE_NUM : varchar
-       ORCA_HOKEN_COMBI_NUM : smallint
-       HOKEN_NUM : smallint
-       ORCA_SINRYOKA_CODE : smallint
-       DOCTOR_ID
-       COMMENT1 : varchar
-       REVISION_NUM : smallint
-       LATEST_STATE : smallint
-       REVISION_STATE : smallint
-       UKETSUKE_STATE : smallint
-   }
+        受付ID : PK
+        患者基本情報ID : FK
+        予約ID : FK nullable
+        医師ID : FK nullable
+        診療科ID : FK
+        受付日時
+        受付番号
+        受付状態 : 診察待ち、診察中、診察終了、会計終了、保留など
+        受付メモ
+    }
+    受付 "1" -- "0..1" 予約
 
    class カルテ {
        カルテID
